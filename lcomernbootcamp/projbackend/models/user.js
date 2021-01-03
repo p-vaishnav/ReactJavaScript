@@ -1,3 +1,4 @@
+const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 const Schema = mongoose.Schema;
@@ -41,37 +42,57 @@ const userSchema = new Schema({
 });
 
 userSchema.virtual('password')
-        .set(function(){
+        .set(function(password){
             this._password = password;
-            this.salt = uuid();
+            this.salt = uuidv4();
             this.encry_password = this.securepassword(password);
         })
         .get(function(){
             return this._password;
         });
 
-userSchema.method({
-    authenticate:function(){
-        return this.encry_password === this.securepassword(password);
-    },
-    securepassword : function(plainPassword){
-            if(!plainPassword){
-                return "";
-            }//if
+// userSchema.methods({
+//     authenticate:function(){
+//         return this.encry_password === this.securepassword(password);
+//     },
+    // securepassword : function(plainPassword){
+    //         if(!plainPassword){
+    //             return "";
+    //         }//if
 
-            else{
-                try{
-                    return crypto.createHmac('sha256', this.salt).update(plainPassword).digest('hex');
-                }//try
+    //         else{
+    //             try{
+    //                 return crypto.createHmac('sha256', this.salt).update(plainPassword).digest('hex');
+    //             }//try
                 
-                catch(err){
+    //             catch(err){
 
-                }//catch
-            }
+    //             }//catch
+    //         }
+    // }
+// });
+
+userSchema.methods.authenticate=function(){
+            return this.encry_password === this.securepassword(password);
+}
+
+userSchema.methods.securepassword = function(plainPassword){
+    if(!plainPassword){
+        return "";
+    }//if
+
+    else{
+        try{
+            return crypto.createHmac('sha256', this.salt).update(plainPassword).digest('hex');
+        }//try
+        
+        catch(err){
+
+        }//catch
     }
-});
+}
 
-module.export = mongoose.model("User",userSchema);
+module.exports = mongoose.model("User",userSchema);
 
 /*const userSchema = new Schema({
   title:  String, // String is shorthand for {type: String}
